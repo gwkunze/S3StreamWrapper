@@ -1,6 +1,7 @@
 {
     "name": "gwk/s3streamwrapper",
-    "description": "S3 Stream Wrapper",
+    "description": "Amazon AWS S3 Stream Wrapper",
+    "keywords": ["aws", "s3", "stream", "stream wrapper"],
     "require": {
         "aws/aws-sdk-php": "~2.1.0"
     },

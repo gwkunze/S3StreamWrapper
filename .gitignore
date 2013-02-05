@@ -1,5 +1,4 @@
 /vendor/
-/data/mime.json
 /tests/config.ini
 /composer.lock
 /.idea/
