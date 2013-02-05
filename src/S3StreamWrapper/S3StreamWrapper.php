@@ -7,6 +7,7 @@
  */
 namespace S3StreamWrapper;
 
+use Aws\S3\Exception\NoSuchKeyException;
 use Aws\S3\S3Client;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\EntityBodyInterface;
@@ -422,10 +423,7 @@ class S3StreamWrapper
         if($this->data === null) {
             return false;
         }
-        var_dump($count, $this->data);
-
-        var_dump($result = $this->data->read($count));
-        return $result;
+        return $this->data->read($count);
     }
 
     /**
@@ -531,6 +529,13 @@ class S3StreamWrapper
 
         $client = $this->getClient();
 
-        $client->headObject($options);
+        try {
+            /** @var $response Model */
+            $response = $client->headObject($options);
+
+            return $response->toArray();
+        } catch(NoSuchKeyException $e) {
+            return false;
+        }
     }
 }
