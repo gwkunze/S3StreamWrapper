@@ -550,7 +550,7 @@ class S3StreamWrapper
             );
 
             $result = $client->listObjects($options);
-            if(count($result['Contents'] + count($result['CommonPrefixes']))) {
+            if(count($result['Contents']) + count($result['CommonPrefixes'])) {
                 return $this->stat(self::STAT_DIR, 0, time());
             }
 
