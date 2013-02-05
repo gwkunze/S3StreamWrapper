@@ -19,6 +19,9 @@ class S3StreamWrapper
 
     public $context;
 
+    const STAT_DIR = 0040777;
+    const STAT_FILE = 0100777;
+
     /**
      * @var S3Client
      */
@@ -126,7 +129,6 @@ class S3StreamWrapper
         $this->dir_list_options = array(
             'Bucket' => $parsed['bucket'],
             'Delimiter' => $this->getSeparator(),
-            'MaxKeys' => 1,
         );
 
         if(strlen($parsed['path']) > 0) {
@@ -404,8 +406,7 @@ class S3StreamWrapper
             } else {
                 $this->data->seek(0, SEEK_SET);
             }
-            $this->metadata = $response->toArray();
-            unset($this->metadata['Body']);
+            $this->metadata = $response;
             $this->dirty = false;
         } else {
             $this->data = EntityBody::factory("");
@@ -456,7 +457,7 @@ class S3StreamWrapper
      */
     public function stream_stat()
     {
-        return $this->metadata;
+        return $this->stat(self::STAT_FILE, $this->data->getSize(), time());
     }
 
     /**
@@ -522,6 +523,11 @@ class S3StreamWrapper
     {
         $parsed = $this->parsePath($path);
 
+        if($parsed['path'] == "") {
+            // Root is a directory
+            return $this->stat(self::STAT_DIR, 0, time());
+        }
+
         $options = array(
             'Bucket' => $parsed['bucket'],
             'Key' => $parsed['path'],
@@ -533,9 +539,50 @@ class S3StreamWrapper
             /** @var $response Model */
             $response = $client->headObject($options);
 
-            return $response->toArray();
+            // Path points to a file
+            return $this->stat(self::STAT_FILE, (int)$response['ContentLength'], strtotime($response['LastModified']));
         } catch(NoSuchKeyException $e) {
+            // File not found, might be a directory
+            $options = array(
+                'Bucket' => $parsed['bucket'],
+                'Prefix' => $parsed['path'] . $this->getSeparator(),
+                'MaxKeys' => 1,
+            );
+
+            $result = $client->listObjects($options);
+            if(count($result['Contents'] + count($result['CommonPrefixes']))) {
+                return $this->stat(self::STAT_DIR, 0, time());
+            }
+
             return false;
         }
+    }
+
+    private function stat($permission, $size, $mtime) {
+        $data = array(
+            'dev' => 0,
+            'ino' => 0,
+            'mode' => $permission,
+            'nlink' => 1,
+            'uid' => 0,
+            'gid' => 0,
+            'rdev' => 0,
+            'size' => $size,
+            'atime' => $mtime,
+            'mtime' => $mtime,
+            'ctime' => $mtime,
+            'blksize' => -1,
+            'blocks' => -1,
+        );
+
+        $result = array();
+        foreach($data as $key => $value) {
+            $result[] = $value;
+        }
+        foreach($data as $key => $value) {
+            $result[$key] = $value;
+        }
+
+        return $result;
     }
 }
