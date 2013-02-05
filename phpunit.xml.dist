@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2013 Gijs Kunze
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+-->
+<phpunit bootstrap="./tests/bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="S3Streamwrapper Test Suite">
+            <directory suffix="Test.php">./tests/S3StreamWrapper/Test/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./src/S3StreamWrapper/</directory>
+        </whitelist>
+    </filter>
+</phpunit>
