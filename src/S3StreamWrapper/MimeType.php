@@ -11,13 +11,15 @@ namespace S3StreamWrapper;
 
 use Guzzle\Http\EntityBodyInterface;
 
-class MimeType {
+class MimeType
+{
     private static $types = null;
 
-    public static function getMimeType($path, EntityBodyInterface $data = null) {
+    public static function getMimeType($path, EntityBodyInterface $data = null)
+    {
         // TODO: Implement magic functionality
 
-        if(self::$types === null) {
+        if (self::$types === null) {
             self::loadMimeFile();
         }
 
@@ -25,20 +27,21 @@ class MimeType {
 
         $ext = strtolower($info['extension']);
 
-        if(isset(self::$types[$ext])) {
+        if (isset(self::$types[$ext])) {
             return self::$types[$ext];
         }
 
         return "binary/octet-stream";
     }
 
-    private static function loadMimeFile() {
+    private static function loadMimeFile()
+    {
         $file = __DIR__ . "/../../data/mime.json";
 
-        if(file_exists($file)) {
+        if (file_exists($file)) {
             $data = file_get_contents($file);
             $types = json_decode($data, true);
-            if(is_array($types)) {
+            if (is_array($types)) {
                 self::$types = $types;
             } else {
                 self::$types = array();

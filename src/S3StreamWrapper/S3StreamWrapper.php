@@ -64,7 +64,7 @@ class S3StreamWrapper
     private function getOptions()
     {
         $context = $this->context;
-        if($context === null) {
+        if ($context === null) {
             $context = stream_context_get_default();
         }
         $options = stream_context_get_options($context);
@@ -82,19 +82,20 @@ class S3StreamWrapper
 
     private function getClient()
     {
-        if(empty($this->client)) {
+        if (empty($this->client)) {
             $this->client = call_user_func(array(self::$clientClass, 'factory'), $this->getOptions());
         }
         return $this->client;
     }
 
-    private function parsePath($path, $dir = false) {
+    private function parsePath($path, $dir = false)
+    {
         $parsed = parse_url($path);
 
         $bucket = $parsed['host'];
         $path = isset($parsed['path']) ? ltrim($parsed['path'], '/') : '';
 
-        if(!$dir) {
+        if (!$dir) {
             $path = rtrim($path, $this->getSeparator());
         }
 
@@ -131,7 +132,7 @@ class S3StreamWrapper
             'Delimiter' => $this->getSeparator(),
         );
 
-        if(strlen($parsed['path']) > 0) {
+        if (strlen($parsed['path']) > 0) {
             $this->dir_list_options['Prefix'] = $parsed['path'];
         }
 
@@ -145,20 +146,20 @@ class S3StreamWrapper
      */
     public function dir_readdir()
     {
-        if(is_array($this->dir_list) && count($this->dir_list) > 0) {
+        if (is_array($this->dir_list) && count($this->dir_list) > 0) {
             return array_shift($this->dir_list);
         }
 
-        if($this->dir_list_has_more) {
+        if ($this->dir_list_has_more) {
             $client = $this->getClient();
             $options = $this->dir_list_options;
-            if($this->dir_list_marker !== null) {
+            if ($this->dir_list_marker !== null) {
                 $options['Marker'] = $this->dir_list_marker;
             }
             /** @var $response Model */
             $response = $client->listObjects($options);
 
-            if($response->get("IsTruncated")) {
+            if ($response->get("IsTruncated")) {
                 $this->dir_list_has_more = true;
                 $this->dir_list_marker = $response->get("NextMarker");
             } else {
@@ -166,11 +167,11 @@ class S3StreamWrapper
             }
             $contents = $response->get("Contents");
             $this->dir_list = array();
-            foreach($contents as $file) {
+            foreach ($contents as $file) {
                 $this->dir_list[] = $file['Key'];
             }
             $prefixes = $response->get("CommonPrefixes");
-            foreach($prefixes as $dir) {
+            foreach ($prefixes as $dir) {
                 $this->dir_list[] = $dir['Prefix'];
             }
 
@@ -199,6 +200,7 @@ class S3StreamWrapper
     public function mkdir($path, $mode, $options)
     {
         // Nothing to do here directories don't really exist
+        return true;
     }
 
     /**
@@ -222,6 +224,7 @@ class S3StreamWrapper
     public function rmdir($path, $options)
     {
         // Nothing to do here directories don't really exist
+        return true;
     }
 
     /**
@@ -238,7 +241,7 @@ class S3StreamWrapper
      */
     public function stream_close()
     {
-        if($this->data == null) {
+        if ($this->data == null) {
             return;
         }
 
@@ -256,7 +259,7 @@ class S3StreamWrapper
      */
     public function stream_eof()
     {
-        if($this->data === null) {
+        if ($this->data === null) {
             return true;
         }
 
@@ -268,7 +271,7 @@ class S3StreamWrapper
      */
     public function stream_flush()
     {
-        if($this->save === false || $this->dirty == false || $this->data === null) {
+        if ($this->save === false || $this->dirty == false || $this->data === null) {
             return;
         }
 
@@ -282,24 +285,24 @@ class S3StreamWrapper
             'Body' => $this->data,
         );
 
-        if(isset($options['acl'])) {
+        if (isset($options['acl'])) {
             $object['ACL'] = $options['acl'];
         }
 
-        if(isset($options['ContentType'])) {
+        if (isset($options['ContentType'])) {
             $object['ContentType'] = $options['ContentType'];
         } else {
             $object['ContentType'] = MimeType::getMimeType($this->path['path'], $this->data);
         }
 
         $headers = array('CacheControl', 'ContentDisposition', 'ContentEncoding', 'ContentLanguage', 'Expires');
-        foreach($headers as $header) {
-            if(isset($options[$header])) {
+        foreach ($headers as $header) {
+            if (isset($options[$header])) {
                 $object[$header] = $options[$header];
             }
         }
 
-        if(isset($options['metadata'])) {
+        if (isset($options['metadata'])) {
             $options['Metadata'] = $options['metadata'];
         }
 
@@ -345,7 +348,7 @@ class S3StreamWrapper
 
         $mode = preg_replace("/b/", "", $mode);
 
-        switch($mode) {
+        switch ($mode) {
             case "r":
                 $load = true;
                 $check = true;
@@ -388,12 +391,12 @@ class S3StreamWrapper
 
         $client = $this->getClient();
 
-        if($check && !$client->doesObjectExist($this->path['bucket'], $this->path['path'])) {
+        if ($check && !$client->doesObjectExist($this->path['bucket'], $this->path['path'])) {
             trigger_error("File $path does not exist, can't open with mode $mode", E_USER_WARNING);
             return false;
         }
 
-        if($load) {
+        if ($load) {
             $options = array(
                 'Bucket' => $this->path['bucket'],
                 'Key' => $this->path['path'],
@@ -401,7 +404,7 @@ class S3StreamWrapper
             /** @var $response Model */
             $response = $client->getObject($options);
             $this->data = $response['Body'];
-            if($pos === "end") {
+            if ($pos === "end") {
                 $this->data->seek(0, SEEK_END);
             } else {
                 $this->data->seek(0, SEEK_SET);
@@ -421,7 +424,7 @@ class S3StreamWrapper
      */
     public function stream_read($count)
     {
-        if($this->data === null) {
+        if ($this->data === null) {
             return false;
         }
         return $this->data->read($count);
@@ -434,7 +437,7 @@ class S3StreamWrapper
      */
     public function stream_seek($offset, $whence = SEEK_SET)
     {
-        if($this->data === null) {
+        if ($this->data === null) {
             return false;
         }
 
@@ -465,7 +468,7 @@ class S3StreamWrapper
      */
     public function stream_tell()
     {
-        if($this->data === null) {
+        if ($this->data === null) {
             return 0;
         }
         return $this->data->ftell();
@@ -477,7 +480,7 @@ class S3StreamWrapper
      */
     public function stream_truncate($new_size)
     {
-        if($this->data === null) {
+        if ($this->data === null) {
             return false;
         }
         $this->data->setSize($new_size);
@@ -490,9 +493,10 @@ class S3StreamWrapper
      */
     public function stream_write($data)
     {
-        if($this->data === null) {
+        if ($this->data === null) {
             return 0;
         }
+        $this->dirty = true;
         return $this->data->write($data);
     }
 
@@ -523,7 +527,7 @@ class S3StreamWrapper
     {
         $parsed = $this->parsePath($path);
 
-        if($parsed['path'] == "") {
+        if ($parsed['path'] == "") {
             // Root is a directory
             return $this->stat(self::STAT_DIR, 0, time());
         }
@@ -541,7 +545,7 @@ class S3StreamWrapper
 
             // Path points to a file
             return $this->stat(self::STAT_FILE, (int)$response['ContentLength'], strtotime($response['LastModified']));
-        } catch(NoSuchKeyException $e) {
+        } catch (NoSuchKeyException $e) {
             // File not found, might be a directory
             $options = array(
                 'Bucket' => $parsed['bucket'],
@@ -550,7 +554,7 @@ class S3StreamWrapper
             );
 
             $result = $client->listObjects($options);
-            if(count($result['Contents']) + count($result['CommonPrefixes'])) {
+            if (count($result['Contents']) + count($result['CommonPrefixes'])) {
                 return $this->stat(self::STAT_DIR, 0, time());
             }
 
@@ -558,7 +562,8 @@ class S3StreamWrapper
         }
     }
 
-    private function stat($permission, $size, $mtime) {
+    private function stat($permission, $size, $mtime)
+    {
         $data = array(
             'dev' => 0,
             'ino' => 0,
@@ -576,10 +581,10 @@ class S3StreamWrapper
         );
 
         $result = array();
-        foreach($data as $key => $value) {
+        foreach ($data as $key => $value) {
             $result[] = $value;
         }
-        foreach($data as $key => $value) {
+        foreach ($data as $key => $value) {
             $result[$key] = $value;
         }
 
