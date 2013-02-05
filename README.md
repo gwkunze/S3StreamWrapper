@@ -8,6 +8,10 @@ Example
 ``` php
 <?php
 
+use S3StreamWrapper\S3StreamWrapper;
+
+S3StreamWrapper::register();
+
 $options = array(
     'key' => "YOUR AWS KEY HERE",
     'secret' => "YOUR AWS SECRET HERE",
