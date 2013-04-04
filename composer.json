@@ -5,6 +5,9 @@
     "require": {
         "aws/aws-sdk-php": "~2.1.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
     "license": "MIT",
     "authors": [
         {

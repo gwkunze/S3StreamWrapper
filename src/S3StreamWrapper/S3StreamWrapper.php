@@ -199,7 +199,21 @@ class S3StreamWrapper
      */
     public function mkdir($path, $mode, $options)
     {
-        // Nothing to do here directories don't really exist
+        $parsed = $this->parsePath($path);
+
+        $object = array(
+            'Body' => '',
+            'Bucket' => $parsed['bucket'],
+            'Key' => $parsed['path'] . $this->getSeparator(),
+        );
+
+        if (isset($options['acl'])) {
+            $object['ACL'] = $options['acl'];
+        }
+
+        $client = $this->getClient();
+        $client->putObject($object);
+
         return true;
     }
 
@@ -223,7 +237,28 @@ class S3StreamWrapper
      */
     public function rmdir($path, $options)
     {
-        // Nothing to do here directories don't really exist
+        $parsed = $this->parsePath($path);
+
+        $client = $this->getClient();
+
+        try {
+            $result = $client->headObject(array(
+                'Bucket' => $parsed['bucket'],
+                'Key' => $parsed['path'] . $this->getSeparator(),
+            ));
+        } catch (NoSuchKeyException $e) {
+            return false;
+        }
+
+        if($result['ContentLength'] != 0) {
+            return false;
+        }
+
+        $client->deleteObject(array(
+            'Bucket' => $parsed['bucket'],
+            'Key' => $parsed['path'] . $this->getSeparator(),
+        ));
+
         return true;
     }
 
@@ -303,7 +338,7 @@ class S3StreamWrapper
         }
 
         if (isset($options['metadata'])) {
-            $options['Metadata'] = $options['metadata'];
+            $object['Metadata'] = $options['metadata'];
         }
 
         $client->putObject($object);
@@ -525,7 +560,7 @@ class S3StreamWrapper
      */
     public function url_stat($path, $flags)
     {
-        $parsed = $this->parsePath($path);
+        $parsed = $this->parsePath($path, true);
 
         if ($parsed['path'] == "") {
             // Root is a directory
@@ -542,14 +577,16 @@ class S3StreamWrapper
         try {
             /** @var $response Model */
             $response = $client->headObject($options);
-
             // Path points to a file
+            if ($parsed['path'][strlen($parsed['path']) - 1] == $this->getSeparator() && $response['ContentLength'] == 0) {
+                return $this->stat(self::STAT_DIR, 0, strtotime($response['LastModified']));
+            }
             return $this->stat(self::STAT_FILE, (int)$response['ContentLength'], strtotime($response['LastModified']));
         } catch (NoSuchKeyException $e) {
             // File not found, might be a directory
             $options = array(
                 'Bucket' => $parsed['bucket'],
-                'Prefix' => $parsed['path'] . $this->getSeparator(),
+                'Prefix' => rtrim($parsed['path'], $this->getSeparator()) . $this->getSeparator(),
                 'MaxKeys' => 1,
             );
 
