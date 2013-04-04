@@ -25,6 +25,7 @@ echo file_get_contents("s3://mybucket/file1");
 echo file_put_contents("s3://mybucket/file2", "Foobar!");
 
 print_r(scandir("s3://mybucket/"));
+```
 
 License
 =======
