@@ -3,7 +3,7 @@
     "description": "Amazon AWS S3 Stream Wrapper",
     "keywords": ["aws", "s3", "stream", "stream wrapper"],
     "require": {
-        "aws/aws-sdk-php": "~2.1.0"
+        "aws/aws-sdk-php": ">=2.1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "3.7.*"
