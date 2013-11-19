@@ -255,7 +255,7 @@ class S3StreamWrapper
                 'Key' => $parsed['path'] . $this->getSeparator(),
             ));
         } catch (NoSuchKeyException $e) {
-            return false;
+            return true;
         }
 
         if($result['ContentLength'] != 0) {
