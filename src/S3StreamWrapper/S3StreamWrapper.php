@@ -133,7 +133,7 @@ class S3StreamWrapper
         );
 
         if (strlen($parsed['path']) > 0) {
-            $this->dir_list_options['Prefix'] = $parsed['path'];
+            $this->dir_list_options['Prefix'] = rtrim($parsed['path'], $this->getSeparator()) . $this->getSeparator();
         }
 
         $this->dir_list_has_more = true;
@@ -147,7 +147,11 @@ class S3StreamWrapper
     public function dir_readdir()
     {
         if (is_array($this->dir_list) && count($this->dir_list) > 0) {
-            return array_shift($this->dir_list);
+            $item = array_shift($this->dir_list);
+            if(isset($this->dir_list_options["Prefix"])) {
+                $item = str_replace($this->dir_list_options["Prefix"], "", $item);
+            }
+            return $item;
         }
 
         if ($this->dir_list_has_more) {
