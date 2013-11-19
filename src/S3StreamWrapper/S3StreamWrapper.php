@@ -559,6 +559,8 @@ class S3StreamWrapper
         );
 
         $client->deleteObject($options);
+
+        return true;
     }
 
     /**
