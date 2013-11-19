@@ -167,12 +167,16 @@ class S3StreamWrapper
             }
             $contents = $response->get("Contents");
             $this->dir_list = array();
-            foreach ($contents as $file) {
-                $this->dir_list[] = $file['Key'];
+            if(is_array($contents)) {
+                foreach ($contents as $file) {
+                    $this->dir_list[] = $file['Key'];
+                }
             }
             $prefixes = $response->get("CommonPrefixes");
-            foreach ($prefixes as $dir) {
-                $this->dir_list[] = $dir['Prefix'];
+            if(is_array($prefixes)) {
+                foreach ($prefixes as $dir) {
+                    $this->dir_list[] = $dir['Prefix'];
+                }
             }
 
             return $this->dir_readdir();
