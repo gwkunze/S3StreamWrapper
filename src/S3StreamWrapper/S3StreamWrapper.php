@@ -401,11 +401,8 @@ class S3StreamWrapper
                 $write = true;
                 break;
             case "w":
-                $write = true;
-                break;
             case "w+":
                 $write = true;
-                $load = true;
                 break;
             case "a":
             case "a+":
