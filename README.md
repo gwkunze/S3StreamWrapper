@@ -13,9 +13,12 @@ use S3StreamWrapper\S3StreamWrapper;
 S3StreamWrapper::register();
 
 $options = array(
-    'key' => "YOUR AWS KEY HERE",
-    'secret' => "YOUR AWS SECRET HERE",
+    'credentials' => [
+        'key' => "YOUR AWS KEY HERE",
+        'secret' => "YOUR AWS SECRET HERE"
+    ],
     'region' => 'us-east-1',
+    'version' => '2006-03-01'
 );
 
 stream_context_set_default(array('s3' => $options));
